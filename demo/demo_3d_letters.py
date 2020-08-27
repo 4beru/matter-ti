@@ -8,7 +8,7 @@ import utils
 from utils import create_output_folder
 from engine.mpm_solver import MPMSolver
 
-with_gui = False
+with_gui = True
 write_to_disk = True
 
 # Try to run on GPU
@@ -23,7 +23,7 @@ if with_gui:
     gui = ti.GUI("MLS-MPM", res=512, background_color=0x112F41)
 
 if write_to_disk:
-    output_dir = create_output_folder('./particles')
+    output_dir = create_output_folder('./sim')
 
 
 def load_mesh(fn, scale, offset):
@@ -48,7 +48,7 @@ def load_mesh(fn, scale, offset):
     return triangles
 
 
-R = 512
+R = 128
 
 mpm = MPMSolver(res=(R, R, R), size=1, unbounded=True, dt_scale=1)
 
@@ -85,15 +85,19 @@ for frame in range(15000):
     if mpm.n_particles[None] < max_num_particles:
         i = frame % 4 - 2
         j = frame / 4 % 4 - 1
+
+        r = 255 if frame % 3 == 0 else 128
+        g = 255 if frame % 3 == 1 else 128
+        b = 255 if frame % 3 == 2 else 128
+        color = r * 65536 + g * 256 + b
         mpm.add_mesh(triangles=triangles,
                      material=MPMSolver.material_elastic,
-                     color=0xFFFFFF,
+                     color=color,
                      velocity=(0, -2, 0),
                      translation=((i + 0.5) * 0.25, 0, (2 - j) * 0.1))
 
-
     mpm.step(2e-3, print_stat=True)
-    if with_gui and frame % 15 == 0:
+    if with_gui and frame % 3 == 0:
         particles = mpm.particle_info()
         visualize(particles)
 
